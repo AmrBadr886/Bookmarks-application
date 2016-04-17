@@ -13,8 +13,8 @@ class Link(models.Model):
 
 class Bookmark(models.Model):
     title = models.CharField(max_length=200)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    link = models.ForeignKey(Link, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookmarks')
+    link = models.ForeignKey(Link, on_delete=models.CASCADE, related_name='bookmarks')
 
     def __str__(self):
         return self.title
