@@ -7,13 +7,15 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <link rel="stylesheet" href="{%static 'bookmarks/style.css'%}">
     <script rel="stylesheet" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script rel="text/javascript" src="{% static 'bookmarks/jquery.js'%}"></script>
+    {% block external %}{% endblock %}
 </head>
 <body>
     <div class="row">
     <ul id="nav-bar">
         <li><a href="{%url 'main_page' %}">Home</a></li>
         {% if user.is_authenticated %}
-        <li>welcome {{ user.username }}</li>
+        <li>welcome <a href="{% url 'user_page' username=user.username%}">{{ user.username }}</a></li>
         <li><a href="{%url 'user_logout' %}">logout</a></li>
         {% else %}
         <li><a href="{%url 'user_login' %}">Login</a></li>

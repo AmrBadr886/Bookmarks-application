@@ -2,16 +2,5 @@
 {% block title %} {{ user.username }} {% endblock %}
 
 {% block content %}
-<div class="col-md-6 col-md-offset-3">
-    <h1>bookmarks for {{user.username }}</h1>
-    {% with bookmarks=user.bookmarks.all %}
-    {% if bookmarks %}
-    <ul>
-        {% for bookmark in bookmarks %}
-        <li><a href="{{ bookmark.link.url }}">{{bookmark.title}}</a></li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-    {% endwith %}
-</div>
+{% include 'bookmark_list.html'%}
 {% endblock %}

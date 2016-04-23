@@ -44,3 +44,11 @@ class RegistrationForm(forms.Form):
                 raise forms.ValidationError('password must contain at least 1 digit')
         else:
             raise forms.ValidationError('password must be 10 characters or longer')
+
+
+class BookmarkForm(forms.Form):
+    title = forms.CharField(max_length=200)
+    url = forms.URLField(widget=forms.TextInput)
+    tags = forms.CharField(required=False, widget=forms.TextInput)
+
+
