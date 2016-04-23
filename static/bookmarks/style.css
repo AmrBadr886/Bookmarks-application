@@ -36,3 +36,11 @@ li.bookmark{
 .tag-cloud-3 { font-size: 160%; }
 .tag-cloud-4 { font-size: 180%; }
 .tag-cloud-5 { font-size: 200%; }
+
+
+
+
+#nav-bar li{
+    display:inline;
+    margin: 0 5px;
+}

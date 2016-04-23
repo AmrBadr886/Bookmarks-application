@@ -52,3 +52,8 @@ class BookmarkForm(forms.Form):
     tags = forms.CharField(required=False, widget=forms.TextInput)
 
 
+class SearchForm(forms.Form):
+    query = forms.CharField(max_length=200,
+                            widget=forms.TextInput(attrs={'size': 32}),
+                            label='Enter a keyword to search for'
+                            )

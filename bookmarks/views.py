@@ -137,3 +137,31 @@ def tag_cloud_page(request):
         tag.weight = int(MAX_WEIGHT * (tag.count - min_count) / range)
     return render(request, 'bookmarks/tag_cloud_page.html', {'tags': tags})
 
+
+def search_page(request):
+    form = SearchForm()
+    bookmarks = []
+    error = None
+    show_results = False
+    if request.GET.get('query'):
+        show_results = True
+        query = request.GET.get('query').strip()
+        form = SearchForm({'query': query})
+        bookmarks = Bookmark.objects.filter(title__icontains=query)[:10]
+        if not bookmarks:
+            error = 'No bookmarks with this title'
+        else:
+            error = None
+    context = {
+        'form': form,
+        'bookmarks': bookmarks,
+        'show_results': show_results,
+        'show_user': True,
+        'show_tags': True,
+        'error': error,
+    }
+    if request.GET.get('ajax') is not None:
+        print('ajax')
+        return render(request, 'bookmark_list.html', context=context)
+    else:
+        return render(request, 'bookmarks/search.html', context=context)

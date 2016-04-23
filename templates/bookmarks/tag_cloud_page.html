@@ -1,7 +1,7 @@
+{% extends 'base.html' %}
+{% block title %} Tag cloud {% endblock %}
+{% block content %}
 <div class="col-md-6 col-md-offset-3">
-    {% extends 'base.html' %}
-    {% block title %} Tag cloud {% endblock %}
-    {% block content %}
     <div class="tag-cloud">
         {% for tag in tags %}
         <a href="{% url 'tag_page' tag.title %}" class="tag-cloud-{{tag.weight}}">{{ tag.title }}</a>

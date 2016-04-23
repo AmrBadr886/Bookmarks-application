@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load staticfiles%}
+{% block title %} Search Bookmarks {% endblock %}
+{% block external %}<script type="text/javascript" src="{% static 'bookmarks/search.js'%}"></script>{% endblock %}
+{% block content %}
+<div class="col-md-6 col-md-offset-3">
+    <form id="search-form" action="{% url 'search_page' %}" method="get">
+        {% csrf_token %}
+        <ul>
+            {{ form.as_ul }}
+        </ul>
+        <input type="submit" value="search">
+    </form>
+        <div id="search-results">
+            {% if show_results %}
+            {% include 'bookmark_list.html' %}
+            {% endif %}
+        </div>
+     {% if error %}
+        <p>{{error}}</p>
+    {% endif %}
+</div>
+{% endblock %}
