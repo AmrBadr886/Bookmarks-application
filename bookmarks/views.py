@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, Http404, HttpResponseRedirect
@@ -17,7 +18,8 @@ def user_page(request, username):
     bookmarks = user.bookmarks.all()
     context = {
         'bookmarks': bookmarks,
-        'show_tags': True
+        'show_tags': True,
+        'show_edit': username == request.user.username
     }
     return render(request, 'bookmarks/user_page.html', context=context)
 
@@ -77,32 +79,49 @@ def user_register(request):
 
 @login_required
 def bookmark_save(request):
+    print(request.GET)
     if request.method == 'POST':
         form = BookmarkForm(request.POST)
         if form.is_valid():
-            # Create or get the link
-            link, created = Link.objects.get_or_create(
-                url=form.cleaned_data['url']
-            )
-            # Create or get the bookmark
-            bookmark, dummy = Bookmark.objects.get_or_create(
-                user=request.user,
-                link=link
-            )
-            # Update the bookmark title
-            bookmark.title = form.cleaned_data['title']
-            # If updated clear the tags
-            if not created:
-                bookmark.tags.clear()
-                tag_names = form.cleaned_data['tags'].split()
-                for tag_name in tag_names:
-                    tag, dummy = Tag.objects.get_or_create(title=tag_name)
-                    bookmark.tags.add(tag)
-                bookmark.save()
-                return HttpResponseRedirect(reverse('main_page'))
+            print('form is valid')
+            bookmark = _bookmark_save(request, form)
+            if 'ajax' in request.GET:
+                print('works')
+                context = {
+                    'show_tags': True,
+                    'show_edit': True,
+                    'bookmarks': [bookmark]
+                }
+                return render(request, 'bookmark_list.html', context=context)
+            else:
+                return HttpResponseRedirect(reverse('user_page', kwargs={'username': request.user.username}))
+        else:
+            if request.GET.get('ajax'):
+                return HttpResponse('failure')
+    elif 'url' in request.GET:
+        url = request.GET.get('url')
+        title = ''
+        tags = ''
+        try:
+            link = Link.objects.get(url=url)
+            bookmark = Bookmark.objects.get(link=link,
+                                            user=request.user)
+            title = bookmark.title
+            tags = ' '.join(tag.title for tag in bookmark.tags.all())
+        except ObjectDoesNotExist:
+            pass
+        form = BookmarkForm({
+            'title': title,
+            'url': url,
+            'tags': tags,
+        })
+        if 'ajax' in request.GET:
+            return render(request, 'bookmark_save_form.html', {'form': form})
+        else:
+            return render(request, 'bookmarks/bookmark_save_page.html', {'form': form})
     else:
         form = BookmarkForm()
-    return render(request, 'bookmarks/bookmark_form.html', {'form': form})
+    return render(request, 'bookmarks/bookmark_save_page.html', {'form': form})
 
 
 def tag_page(request, tag_name):
@@ -165,3 +184,27 @@ def search_page(request):
         return render(request, 'bookmark_list.html', context=context)
     else:
         return render(request, 'bookmarks/search.html', context=context)
+
+
+# Helper functions
+def _bookmark_save(request, form):
+    # Create or get link.
+    link, dummy = \
+        Link.objects.get_or_create(url=form.cleaned_data['url'])
+    # Create or get bookmark.
+    bookmark, created = Bookmark.objects.get_or_create(
+        user=request.user,
+        link=link)
+    # Update bookmark title.
+    bookmark.title = form.cleaned_data['title']
+    # If the bookmark is being updated, clear old tag list.
+    if not created:
+        bookmark.tags.clear()
+    # Create new tag list.
+    tag_names = form.cleaned_data['tags'].split()
+    for tag_name in tag_names:
+        tag, dummy = Tag.objects.get_or_create(title=tag_name)
+        bookmark.tags.add(tag)
+        # Save bookmark to database and return it. bookmark.save()
+        bookmark.save()
+    return bookmark

@@ -1,25 +1,28 @@
 <div class="col-md-6 col-md-offset-3">
     {% if bookmarks %}
-        <ul class="bookmarks-list">
-            {% for bookmark in bookmarks %}
-                <li class="bookmark">
-                    <a href="{{bookmark.link.url}}" class="bookmark-title">{{bookmark.title|escape}}</a>
-                    <br/>
-                    {% if show_tags%}
-                    Tags:
-                    {% if bookmark.tags.all %}
-                        <ul class="tags-list">
-                            {% for tag in bookmark.tags.all %}
-                                <li><a href="{% url 'tag_page' tag.title%}">{{ tag.title }}</a></li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                    {% endif %}
-                    {% if show_user%}
-                        Posted by <a href="{% url 'user_page' bookmark.user.username%}">{{ bookmark.user.username}}</a>
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
+    <ul class="bookmarks-list">
+        {% for bookmark in bookmarks %}
+        <li class="bookmark">
+            <a href="{{bookmark.link.url}}" class="bookmark-title">{{bookmark.title|escape}}</a>
+            {% if show_edit %}
+            <a href="{% url 'bookmark_save'%}?url={{bookmark.link.url}}" class="edit"> edit </a>
+            {% endif %}
+            <br/>
+            {% if show_tags%}
+            Tags:
+            {% if bookmark.tags.all %}
+            <ul class="tags-list">
+                {% for tag in bookmark.tags.all %}
+                <li><a href="{% url 'tag_page' tag.title%}">{{ tag.title }}</a></li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {% endif %}
+            {% if show_user%}
+            Posted by <a href="{% url 'user_page' bookmark.user.username%}">{{ bookmark.user.username}}</a>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
     {% endif %}
 </div>

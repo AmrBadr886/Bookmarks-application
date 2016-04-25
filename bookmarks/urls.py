@@ -16,5 +16,5 @@ urlpatterns = [
 
 
     # Account management
-    url(r'^save$', bookmark_save, name='bookmark_save')
+    url(r'^save/$', bookmark_save, name='bookmark_save')
 ]
