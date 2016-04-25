@@ -32,7 +32,7 @@ def user_login(request):
             )
             if user:
                 login(request, user)
-                if 'next' in request.session:
+                if request.session['next']:
                     next = request.session['next']
                     del request.session['next']
                     return HttpResponseRedirect(next)
