@@ -208,3 +208,10 @@ def _bookmark_save(request, form):
         # Save bookmark to database and return it. bookmark.save()
         bookmark.save()
     return bookmark
+
+
+def ajax_tag_autocomplete(request):
+    if 'q' in request.GET:
+        tags = Tag.objects.filter(title__istartswith=request.GET['q'])[:10]
+        return HttpResponse('\n'.join(tag.title for tag in tags))
+    return HttpResponse()

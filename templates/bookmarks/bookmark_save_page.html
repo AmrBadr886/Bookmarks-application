@@ -1,5 +1,12 @@
 {% extends 'base.html' %}
+{% load staticfiles%}
 {% block title %} New Bookmark {% endblock %}
+{% block external%}
+<link rel="stylesheet" href="{% static 'bookmarks/jquery.autocomplete.css'%}">
+<script rel="text/javascript" src="{% static 'bookmarks/jquery.autocomplete.min.js'%}"></script>
+<script rel="text/javascript" src="{% static 'bookmarks/tag_autocomplete.js' %}"></script>
+{% endblock%}
+
 
 {% block content %}
 <div class="col-md-6 col-md-offset-3">
