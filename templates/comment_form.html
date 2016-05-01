@@ -1,0 +1,7 @@
+<form action="{% url 'bookmark_page' shared_bookmark.id%}" method="post" id="comment_form">
+    {% csrf_token %}
+    <ul>
+        {{ form.as_ul }}
+    </ul>
+    <input type="submit" value="comment">
+</form>

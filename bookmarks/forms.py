@@ -58,3 +58,7 @@ class SearchForm(forms.Form):
                             widget=forms.TextInput(attrs={'size': 32}),
                             label='Enter a keyword to search for'
                             )
+
+
+class BookmarkCommentForm(forms.Form):
+    text = forms.CharField(max_length=500)

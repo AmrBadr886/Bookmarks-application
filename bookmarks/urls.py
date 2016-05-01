@@ -6,8 +6,9 @@ urlpatterns = [
     url(r'^$', main_page, name='main_page'),
     url(r'^users/(?P<username>\w+)$', user_page, name='user_page'),
     url(r'^tags$', tag_cloud_page, name='tag_cloud_page'),
-    url(r'^tags/(?P<tag_name>[^\s]+)', tag_page, name='tag_page'),
+    url(r'^tags/(?P<tag_name>[^\s]+)$', tag_page, name='tag_page'),
     url(r'^search/$', search_page, name='search_page'),
+    url(r'^bookmark/(?P<id>\d+)$', bookmark_page, name='bookmark_page'),
 
     # Session management
     url(r'^login$', user_login, name='user_login'),

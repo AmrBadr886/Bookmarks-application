@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %} Bookmark | {{shared_bookmark.bookmark.title}} {% endblock %}
+{% block content%}
+<div class="col-md-6 col-md-offset-3">
+    {% if request.user not in shared_bookmark.user_voted.all %}
+    <a href="{% url 'bookmark_vote' %}?id={{shared_bookmark.id}}">[+]</a>
+    {% endif %}
+    <a href="{{ shared_bookmark.bookmark.link.url}}" class="title">{{shared_bookmark.bookmark.title}}</a>
+    </br>
+    posted by :
+    <a href="{% url 'user_page' shared_bookmark.bookmark.user.username %}">{{shared_bookmark.bookmark.user.username}}</a>
+    <span class="vote_count"> | Votes :{{shared_bookmark.votes}}</span>
+
+    {% include 'comment_form.html' %}
+    <ul>
+        {% for comment in shared_bookmark.bookmark_comments.all %}
+        <li class="comment">
+            {{comment.text}} by <a href="{% url 'user_page' shared_bookmark.bookmark.user.username %}">
+            {{shared_bookmark.bookmark.user.username}}</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endblock %}
+</div>

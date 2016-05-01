@@ -6,7 +6,7 @@ from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from .models import *
-from .forms import LoginForm, RegistrationForm, BookmarkForm, SearchForm
+from .forms import *
 from django.contrib import messages
 
 
@@ -88,6 +88,28 @@ def search_page(request):
         return render(request, 'bookmark_list.html', context=context)
     else:
         return render(request, 'bookmarks/search.html', context=context)
+
+@login_required
+def bookmark_page(request, id):
+    # This page is for shared bookmarks only to view comments
+    shared_bookmark = get_object_or_404(SharedBookmark, id=id)
+    if request.method == 'POST':
+        form = BookmarkCommentForm(request.POST)
+        if form.is_valid():
+            bookmark_comment = BookmarkComment(
+                text=form.cleaned_data['text'],
+                bookmark=shared_bookmark,
+                user=request.user,
+            )
+            bookmark_comment.save()
+            return HttpResponseRedirect(reverse('bookmark_page', kwargs={'id': shared_bookmark.id}))
+    else:
+        form = BookmarkCommentForm()
+    context = {
+        'form': form,
+        'shared_bookmark': shared_bookmark
+    }
+    return render(request, 'bookmarks/bookmark_page.html', context)
 
 
 # Session management

@@ -36,3 +36,12 @@ class SharedBookmark(models.Model):
 
     def __str__(self):
         return "<%s -%s>" % (self.bookmark, self.votes)
+
+
+class BookmarkComment(models.Model):
+    text = models.CharField(max_length=500)
+    bookmark = models.ForeignKey(SharedBookmark, related_name='bookmark_comments')
+    user = models.ForeignKey(User)
+
+    def __str__(self):
+        return '<%s>' % self.text
