@@ -16,6 +16,7 @@ urlpatterns = [
 
     # Account management
     url(r'^save/$', bookmark_save, name='bookmark_save'),
+    url(r'^vote/$', bookmark_vote, name='bookmark_vote'),
 
     # Ajax
     url(r'^ajax/tag/autocomplete/$', ajax_tag_autocomplete, name='ajax_tag_autocomplete'),

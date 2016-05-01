@@ -1,0 +1,19 @@
+{% if shared_bookmarks %}
+<ul>
+    {% for shared_bookmark in shared_bookmarks %}
+    <li>
+        {% if  request.user not in shared_bookmark.user_voted.all %}
+        <a href="{% url 'bookmark_vote' %}?id={{shared_bookmark.id}}">[+]</a>
+        {% endif %}
+        <a href="{{ shared_bookmark.bookmark.link.url}}" class="title">{{shared_bookmark.bookmark.title}}</a>
+        </br>
+        posted by :
+        <a href="{% url 'user_page' shared_bookmark.bookmark.user.username %}"
+       class="username">{{shared_bookmark.bookmark.user.username}}</a>
+        <span class="vote_count"> | Votes :{{shared_bookmark.votes}}</span>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p> No bookmarks found.</p>
+{% endif %}

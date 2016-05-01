@@ -5,12 +5,16 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
-from .models import Link, Tag, Bookmark
+from .models import *
 from .forms import LoginForm, RegistrationForm, BookmarkForm, SearchForm
+from django.contrib import messages
 
 
+# Browsing
 def main_page(request):
-    return render(request, 'bookmarks/main_page.html')
+    shared_bookmarks = SharedBookmark.objects.order_by('-date')[:10]
+    context = {'shared_bookmarks': shared_bookmarks}
+    return render(request, 'bookmarks/main_page.html', context)
 
 
 def user_page(request, username):
@@ -22,106 +26,6 @@ def user_page(request, username):
         'show_edit': username == request.user.username
     }
     return render(request, 'bookmarks/user_page.html', context=context)
-
-
-def user_login(request):
-    if request.method == 'POST':
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            user = authenticate(
-                username=form.cleaned_data['username'],
-                password=form.cleaned_data['password']
-            )
-            if user:
-                login(request, user)
-                if request.session['next']:
-                    next = request.session['next']
-                    del request.session['next']
-                    return HttpResponseRedirect(next)
-                return HttpResponseRedirect(reverse('main_page'))
-            else:
-                error = 'invalid username or password'
-        else:
-            error = None
-    else:
-        form = LoginForm()
-        error = None
-        request.session['next'] = request.GET.get('next')
-    return render(request, 'bookmarks/user_login.html', {'form': form, 'error': error})
-
-
-def user_logout(request):
-    user = request.user
-    logout(request)
-    return HttpResponseRedirect(reverse('main_page'))
-
-
-def user_register(request):
-    if request.method == 'POST':
-        form = RegistrationForm(request.POST)
-        if form.is_valid():
-            User.objects.create_user(
-                username=form.cleaned_data['username'],
-                email=form.cleaned_data['email'],
-                password=form.cleaned_data['password'],
-            )
-            user = authenticate(
-                username=form.cleaned_data['username'],
-                password=form.cleaned_data['password']
-            )
-            login(request, user)
-            return HttpResponseRedirect(reverse('main_page'))
-    else:
-        form = RegistrationForm()
-
-    return render(request, 'bookmarks/user_register.html', {'form': form})
-
-
-@login_required
-def bookmark_save(request):
-    print(request.GET)
-    if request.method == 'POST':
-        form = BookmarkForm(request.POST)
-        if form.is_valid():
-            print('form is valid')
-            bookmark = _bookmark_save(request, form)
-            if 'ajax' in request.GET:
-                print('works')
-                context = {
-                    'show_tags': True,
-                    'show_edit': True,
-                    'bookmarks': [bookmark]
-                }
-                return render(request, 'bookmark_list.html', context=context)
-            else:
-                return HttpResponseRedirect(reverse('user_page', kwargs={'username': request.user.username}))
-        else:
-            if request.GET.get('ajax'):
-                return HttpResponse('failure')
-    elif 'url' in request.GET:
-        url = request.GET.get('url')
-        title = ''
-        tags = ''
-        try:
-            link = Link.objects.get(url=url)
-            bookmark = Bookmark.objects.get(link=link,
-                                            user=request.user)
-            title = bookmark.title
-            tags = ' '.join(tag.title for tag in bookmark.tags.all())
-        except ObjectDoesNotExist:
-            pass
-        form = BookmarkForm({
-            'title': title,
-            'url': url,
-            'tags': tags,
-        })
-        if 'ajax' in request.GET:
-            return render(request, 'bookmark_save_form.html', {'form': form})
-        else:
-            return render(request, 'bookmarks/bookmark_save_page.html', {'form': form})
-    else:
-        form = BookmarkForm()
-    return render(request, 'bookmarks/bookmark_save_page.html', {'form': form})
 
 
 def tag_page(request, tag_name):
@@ -186,6 +90,68 @@ def search_page(request):
         return render(request, 'bookmarks/search.html', context=context)
 
 
+# Session management
+def user_login(request):
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            user = authenticate(
+                username=form.cleaned_data['username'],
+                password=form.cleaned_data['password']
+            )
+            if user:
+                login(request, user)
+                if request.session['next']:
+                    next = request.session['next']
+                    del request.session['next']
+                    return HttpResponseRedirect(next)
+                return HttpResponseRedirect(reverse('main_page'))
+            else:
+                error = 'invalid username or password'
+        else:
+            error = None
+    else:
+        form = LoginForm()
+        error = None
+        request.session['next'] = request.GET.get('next')
+    return render(request, 'bookmarks/user_login.html', {'form': form, 'error': error})
+
+
+def user_logout(request):
+    user = request.user
+    logout(request)
+    return HttpResponseRedirect(reverse('main_page'))
+
+
+def user_register(request):
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            User.objects.create_user(
+                username=form.cleaned_data['username'],
+                email=form.cleaned_data['email'],
+                password=form.cleaned_data['password'],
+            )
+            user = authenticate(
+                username=form.cleaned_data['username'],
+                password=form.cleaned_data['password']
+            )
+            login(request, user)
+            return HttpResponseRedirect(reverse('main_page'))
+    else:
+        form = RegistrationForm()
+
+    return render(request, 'bookmarks/user_register.html', {'form': form})
+
+
+# Ajax
+def ajax_tag_autocomplete(request):
+    if 'q' in request.GET:
+        tags = Tag.objects.filter(title__istartswith=request.GET['q'])[:10]
+        return HttpResponse('\n'.join(tag.title for tag in tags))
+    return HttpResponse()
+
+
 # Helper functions
 def _bookmark_save(request, form):
     # Create or get link.
@@ -205,13 +171,72 @@ def _bookmark_save(request, form):
     for tag_name in tag_names:
         tag, dummy = Tag.objects.get_or_create(title=tag_name)
         bookmark.tags.add(tag)
-        # Save bookmark to database and return it. bookmark.save()
-        bookmark.save()
+    # Share on the main page if requested
+    if 'share' in request.POST:
+        shared_bookmark, created = SharedBookmark.objects.get_or_create(
+            bookmark=bookmark
+        )
+        if created:
+            shared_bookmark.user_voted.add(request.user)
+            shared_bookmark.save()
+    # Save bookmark to database and return it. bookmark.save()
+    bookmark.save()
     return bookmark
 
 
-def ajax_tag_autocomplete(request):
-    if 'q' in request.GET:
-        tags = Tag.objects.filter(title__istartswith=request.GET['q'])[:10]
-        return HttpResponse('\n'.join(tag.title for tag in tags))
-    return HttpResponse()
+# Account management
+@login_required
+def bookmark_save(request):
+    print(request.GET)
+    if request.method == 'POST':
+        form = BookmarkForm(request.POST)
+        if form.is_valid():
+            bookmark = _bookmark_save(request, form)
+            if 'ajax' in request.GET:
+                context = {
+                    'show_tags': True,
+                    'show_edit': True,
+                    'bookmarks': [bookmark]
+                }
+                return render(request, 'bookmark_list.html', context=context)
+            else:
+                return HttpResponseRedirect(reverse('user_page', kwargs={'username': request.user.username}))
+        else:
+            if request.GET.get('ajax'):
+                return HttpResponse('failure')
+    elif 'url' in request.GET:
+        url = request.GET.get('url')
+        title = ''
+        tags = ''
+        try:
+            link = Link.objects.get(url=url)
+            bookmark = Bookmark.objects.get(link=link,
+                                            user=request.user)
+            title = bookmark.title
+            tags = ' '.join(tag.title for tag in bookmark.tags.all())
+        except ObjectDoesNotExist:
+            pass
+        form = BookmarkForm({
+            'title': title,
+            'url': url,
+            'tags': tags,
+        })
+        if 'ajax' in request.GET:
+            return render(request, 'bookmark_save_form.html', {'form': form})
+        else:
+            return render(request, 'bookmarks/bookmark_save_page.html', {'form': form})
+    else:
+        form = BookmarkForm()
+    return render(request, 'bookmarks/bookmark_save_page.html', {'form': form})
+
+
+@login_required
+def bookmark_vote(request):
+    if 'id' in request.GET:
+        shared_bookmark = get_object_or_404(SharedBookmark, id=request.GET.get('id'))
+        user_voted = shared_bookmark.user_voted.filter(username=request.user.username)
+        if not user_voted:
+            shared_bookmark.votes += 1
+            shared_bookmark.user_voted.add(request.user)
+            shared_bookmark.save()
+    return HttpResponseRedirect(reverse('main_page'))

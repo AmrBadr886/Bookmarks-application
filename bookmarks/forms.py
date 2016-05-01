@@ -50,6 +50,7 @@ class BookmarkForm(forms.Form):
     title = forms.CharField(max_length=200)
     url = forms.URLField(widget=forms.TextInput)
     tags = forms.CharField(required=False, widget=forms.TextInput)
+    share = forms.BooleanField(label='share on the main page', required=False)
 
 
 class SearchForm(forms.Form):
